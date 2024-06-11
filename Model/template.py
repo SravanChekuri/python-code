@@ -22,16 +22,16 @@ class Template(db.Model):
    LAST_UPDATED_DATE = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
 
-   def serialize(self):
+def serialize(self):
         return{
             'TEMPLATE_ID' : self.TEMPLATE_ID,
             'TEMPLATE_NAME' : self.TEMPLATE_NAME,
-            'TEMPLATE' : self.TEMPLATE,
+            'TEMPLATE_SIZE' :self.TEMPLATE_SIZE,
             'TEMPLATE_TYPE' :self.TEMPLATE_TYPE,
             'CREATED_BY' : self.CREATED_BY,
-            'CREATED_AT' : self.CREATED_AT,
+            'CREATION_DATE' : self.CREATION_DATE,
             'LAST_UPDATED_BY' : self.LAST_UPDATED_BY,
-            'UPDATED_AT' : self.UPDATED_AT
+            'LAST_UPDATED_DATE' : self.LAST_UPDATED_DATE
         }
 
 

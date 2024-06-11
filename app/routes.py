@@ -1,3 +1,4 @@
+from functools import wraps
 from app import Flask_app
 from config import db
 from controllers.employeeController import *
@@ -6,18 +7,69 @@ from controllers.empProfileController import *
 from controllers.templateController import *
 
 
+def verify_token(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+ 
+        try:
+ 
+            auth_header = request.headers.get('Authorization')
+ 
+            token = auth_header.split(' ')[1]
+ 
+            print("token", token)
+ 
+            if not token:
+ 
+ 
+                return jsonify({'error': 'Access denied'}), 401
+ 
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            print(decoded_token)
+            secret = decoded_token.get('User_Id')
+            if not secret:
+                return jsonify({'error': 'Invalid token'}), 401
+ 
+            print("secret", secret)
+ 
+            try:
+ 
+                decoded = jwt.decode(token, secret, algorithms=["HS256"])
+ 
+                request.userId = decoded.get('userId')
+ 
+                request.decodedData = decoded
+ 
+                return func(*args, **kwargs)
+ 
+            except jwt.ExpiredSignatureError:
+ 
+ 
+                return jsonify({'error': 'Token expired'}), 401
+ 
+            except jwt.InvalidTokenError as e:
+ 
+ 
+                return jsonify({'error': str(e)}), 401
+ 
+        except Exception as error:
+ 
+            return jsonify({'error': str(error)}), 401
+ 
+    return decorated_function
 
 
 
 
 
 
-
-# add admin
-@Flask_app.route('/add_admin_details', methods=['POST'])
-def add_admin():
-    print("fghjkl")
-    return addadmin()
+# add admin/registration
+@Flask_app.route('/add_user_details', methods=['POST'])
+@verify_token
+def add_User():
+    token = request.headers.get('Authorization')
+    print("token",token)
+    return addUser()
 
 # login
 @Flask_app.route('/login', methods=['POST'])
@@ -175,6 +227,11 @@ def delete_admin(id):
 @Flask_app.route('/add_template',methods=['POST'])
 def add_template():
     return addtemplate()
+
+# get template
+@Flask_app.route('/get_template',methods=['GET'])
+def get_template():
+    return gettemplate()
 
 # retrieve template
 @Flask_app.route('/retrieve_template/<string:Id>', methods=['GET'])

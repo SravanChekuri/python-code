@@ -38,6 +38,7 @@ class Admin(db.Model):
            "LAST_NAME" : self.LAST_NAME,
         #    'password' : self.password,
            "EMAIL_ID" : self.EMAIL_ID,
+           "ROLE" : self.ROLE,
            "MOBILE_NUMBER" : self.MOBILE_NUMBER,
            "EFFECTIVE_START_DATE" : self.EFFECTIVE_START_DATE,
            "EFFECTIVE_END_DATE" : self.EFFECTIVE_END_DATE,

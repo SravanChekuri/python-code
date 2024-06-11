@@ -69,7 +69,19 @@ def temp(TEMPLATE_ID):
         return send_file(file_obj, mimetype=temp.TEMPLATE_TYPE)
     except Exception as e: 
         return jsonify({'error':str(e)}),500
-    
+
+def gettemplate():
+    try:
+        returndata =[]
+        get = Template.query.all()
+        if not get:
+            return jsonify({"error":"templates not found"}),400
+        for i in get:
+            returndata.append(i.serialize())
+            return jsonify({'data': returndata}),200
+    except Exception as e:
+        return jsonify({'error':str(e)}),500
+ 
 def convertrtf(TEMPLATE_ID):
     try:
         temp = Template.query.filter(Template.TEMPLATE_ID==TEMPLATE_ID).one()

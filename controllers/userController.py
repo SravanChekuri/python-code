@@ -19,11 +19,106 @@ import os
 
 
 
-def addadmin():
-    print("fghjk")
+# def addadmin():
+#     print("fghjk")
+#     data = request.json
+#     print("data",data)
+#     try:
+#         # password1 = ''
+#         # for i in range(15):
+#         #     pswchar = chr(random.randint(65, 122))
+#         #     password1 = password1+pswchar
+#         password1 = ''.join(chr(random.randint(97, 122)) for _ in range(15))
+#         # password1 = uuid.uuid4()
+#         print('password1',password1,ord('a'),ord('z'))
+#         # hashed_password = bcrypt.hashpw(request.json['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+#         # hashed_password = bcrypt.generate_password_hash(data['Password']).decode('utf-8')#[:10]
+#         # print('hashed_password',hashed_password)
+#         hashed_password = bcrypt.generate_password_hash(password1).decode('utf-8')
+#         user_id = data['User_Id']
+#         dbdata = Admin.query.filter_by(USER_ID = user_id).first()
+#         if dbdata:
+#             return jsonify({"message": f'user id {user_id} already exist'}),400
+#         email = data['Email_Id']
+#         dbemail = Admin.query.filter_by(EMAIL_ID = email).first()
+#         if dbemail:
+#             return jsonify({"message": f'email {email} already exist'}),400
+#         mobile_number = data['Mobile_Number']
+#         dbnum = Admin.query.filter_by(MOBILE_NUMBER = mobile_number).first()
+#         if dbnum:
+#             return jsonify({"message": f'mobile number {mobile_number} already exist'}),400
+#         returndata =[]
+#         details = Admin(
+#                          USER_ID = data['User_Id'],
+#                          FIRST_NAME = data['First_Name'],
+#                          MIDDLE_NAME = data['Middle_Name'],
+#                          LAST_NAME = data['Last_Name'],
+#                          EMAIL_ID = data['Email_Id'],
+#                          PASSWORD = hashed_password,
+#                          MOBILE_NUMBER = data['Mobile_Number'],
+#                          ROLE = data['Role'],
+#                          EFFECTIVE_START_DATE = data['Effective_Start_Date'],
+#                          EFFECTIVE_END_DATE = data['Effective_End_Date'],
+#                          CREATED_BY = 'HR',
+#                          LAST_UPDATED_BY = 'HR')
+       
+ 
+#         try:
+#             sessiondata ={}
+#             sessiondata[email] = {
+#                     'USER_ID': data['User_Id'],
+#                     'PASSWORD': password1#data['Password']
+#                     }
+ 
+#             fromEmail = os.environ.get("SMTP_EMAIL")
+#             password = os.environ.get("SMTP_PASSWORD")
+ 
+#             msg = MIMEMultipart()
+#             msg['From'] = fromEmail
+#             msg['To'] = email
+#             body = f'Your User id for LOGIN is: {user_id} and Password :{password1} '
+#             msg['Subject'] = 'LOGIN CREDENTIALS'
+#             msg.attach(MIMEText(body, 'plain'))
+#             server =smtplib.SMTP(os.environ.get("SMTP_SERVER"), os.environ.get("SMTP_PORT"))
+#             server.starttls()
+           
+#             server.login(fromEmail,password)
+                       
+#             server.sendmail(fromEmail, email, msg.as_string())
+#             print(server)
+#             server.quit()
+#             # session.clear()
+#             print(sessiondata)
+#         except Exception as e:
+#             return jsonify({'error':str(e)}),500
+#         # return jsonify({'message': f'OTP sent to your mail--{otp}'})
+#         temp = {
+#                 "User_Id" : details.USER_ID,
+#                 "First_Name" : details.FIRST_NAME,
+#                 "Middle_Name" : details.MIDDLE_NAME,
+#                 "Last_Name" : details.LAST_NAME,
+#                 "Email_Id" : details.EMAIL_ID,
+#                 "Mobile_Number" : details.MOBILE_NUMBER,
+#                 "Role" : details.ROLE,
+#                 "Effective_Start_Date" : datetime.strptime(str(details.EFFECTIVE_START_DATE),'%Y-%m-%d'),
+#                 "Effective_End_Date" : datetime.strptime(str(details.EFFECTIVE_END_DATE),'%Y-%m-%d')
+#             }
+#             # details.EFFECTIVE_START_DATE = details.EFFECTIVE_START_DATE.strftime('%Y-%m-%d')
+#             # details['EFFECTIVE_START_DATE']=details['EFFECTIVE_START_DATE'].
+#         returndata.append(temp)
+ 
+#         db.session.add(details)
+#         db.session.commit()
+ 
+#         # return jsonify({'details': details.serialize()}), 201
+#         return jsonify({'message':'Registration successful and login credentials send to respected mail','data': returndata}), 201
+#     except Exception as e:
+#         return jsonify({'error':str(e)}),500
+def addUser():
+ 
     data = request.json
-    print("data",data)
     try:
+        # token =
         # password1 = ''
         # for i in range(15):
         #     pswchar = chr(random.randint(65, 122))
@@ -114,7 +209,6 @@ def addadmin():
         return jsonify({'message':'Registration successful and login credentials send to respected mail','data': returndata}), 201
     except Exception as e:
         return jsonify({'error':str(e)}),500
-    
 
 # login and token authentication[POST Method]
 import jwt
@@ -132,7 +226,7 @@ def login():
                 payload = {'email': user.EMAIL_ID, 'User_Id': user.USER_ID, 'role':user.ROLE, 'exp': expiration_time}
 
                 token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-                return jsonify({'message': 'Login successful', 'User_Id': user.USER_ID, "token": token})
+                return jsonify({'message': 'Login successful', 'User_Id': user.USER_ID, 'Username':user.FIRST_NAME, "token": token})
             else:
                 return jsonify({'error': 'Please enter valid Password'}), 401
         else:
@@ -149,7 +243,9 @@ def email():
         data = request.json
         toEmail = data['Email_Id']
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if  re.match(email_pattern, toEmail):
+        if  not re.match(email_pattern, toEmail):
+            return jsonify({'message': 'Invalid email pattern'}),400
+        else:
             emaildb = Admin.query.filter_by(EMAIL_ID = toEmail).first()
             if not emaildb:
                 return jsonify({'message':f' {toEmail} does not match any User'}), 400
@@ -185,8 +281,6 @@ def email():
                 # session.clear()
                 print(sessiondata)
                 return jsonify({'message': 'OTP sent to your mail'})
-        else:
-            return jsonify({'message': 'Invalid email pattern'})
        
     except Exception as e:
         return jsonify({'error':str(e)}),500

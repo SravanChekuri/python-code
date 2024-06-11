@@ -281,7 +281,10 @@ def addbulk():
         returndta =[]
         for index,row in df.iterrows():
             Employee_number = row.get('Employee_Number')
-            dbdata = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Employee_number).first()
+            e_emp = 'E' + Employee_number[1:]
+            c_emp = 'C' + Employee_number[1:]
+            dbdata = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == e_emp) |
+                                                    (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == c_emp)).first()
             if dbdata:
                 # email pattern validation
                 email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -325,61 +328,71 @@ def addbulk():
                             empb = i.EMPLOYEE_NUMBER
                             if empf[1:] != empb[1:]:
                                 return jsonify ({"error" : f'mobile number {mobile_no} already exist'}),400
-                emp_no = row.get('Emp_Number')
-                if emp_no:
-                    print("updating candidate to employee")
+                # emp_no = row.get('Emp_Number')
+                get_emp = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')).first()
+                print("get_emp......",get_emp)
+                Employee_number = row.get('Employee_Number')
+                Can_emp = 'C' + Employee_number[1:]
+                if not get_emp:
+                    get_Can = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Can_emp).first()
+                    if get_Can:
+                        print("updating candidate to employee")
+                        # empf = row.get('Employee_Number')
+                        # dta = EMPLOYEE_DETAILS.query.filter(
+                        #                                     (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
+                        #                                     (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
+                        #                                     (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
+                        #                                 ).first()
+   
+                        print("get_Can----",get_Can)
+                       
+ 
+                   
+                        email_data = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMAIL_ID == email)).all()
+                        empfr = row.get("Employee_Number")
+                        for i in email_data:
+                                empb = i.EMPLOYEE_NUMBER
+                                if empfr[1:] != empb[1:]:
+                                    return jsonify ({"error" : f'email {email} already exist'}),400
+                        dbESD = datetime.strptime(str(get_Can.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                        Datedb = str(row['Effective_Start_Date'])
+                        print("Datedb",Datedb)
+                        Dated = datetime.strptime(Datedb, "%Y-%m-%d %H:%M:%S")
+                        print("Dated",Dated)
+                        PrevEED = Dated - timedelta(days=1)
+                        if dbESD >= Dated:
+                            return jsonify({"message":"Effective Start Date shouldn't be earlier or same as candidate's Effective Start Date "})
+                        elif dbESD < Dated:
+                            get_Can.EFFECTIVE_END_DATE = PrevEED
+                   
+                        details = EMPLOYEE_DETAILS(
+                                            EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
+                                            EMPLOYEE_NUMBER = row.get('Employee_Number') if row.get('Employee_Number') else dbdata.EMPLOYEE_NUMBER,
+                                            FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
+                                            MIDDLE_NAME = middleName,# if data.get('Middle_Name') else dbdata.MIDDLE_NAME,
+                                            LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
+                                            USER_ID = user.USER_ID,
+                                            WORKER_TYPE = row.get('Worker_Type'),
+                                            DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
+                                            MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
+                                            EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
+                                            EFFECTIVE_END_DATE = row['Effective_End_Date'] if row['Effective_End_Date'] else dbdata.EFFECTIVE_END_DATE ,
+                                            JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
+                                            EMAIL_ID =email,
+                                            CREATED_BY = 'HRName',
+                                            LAST_UPDATED_BY = "HRName")
+                        returndata.append(details)
+                        returndta.append(details.serialize())
+                        print("returndata(a)",returndata)
+                if get_emp:
+                    print("employee update")
                     dta = EMPLOYEE_DETAILS.query.filter(
                                                         (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
                                                         (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
                                                         (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
                                                     ).first()
-
-                    print("dta",dta)
-                    
-                    email_data = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMAIL_ID == email)).all()
-                    empfr = row.get("Emp_Number")
-                    for i in email_data:
-                            empb = i.EMPLOYEE_NUMBER
-                            if empfr[1:] != empb[1:]:
-                                return jsonify ({"error" : f'email {email} already exist'}),400
-                    dbESD = datetime.strptime(str(dta.EFFECTIVE_START_DATE), "%Y-%m-%d")
-                    Datedb = str(row['Effective_Start_Date'])
-                    print("Datedb",Datedb)
-                    Dated = datetime.strptime(Datedb, "%Y-%m-%d %H:%M:%S")
-                    print("Dated",Dated)
-                    PrevEED = Dated - timedelta(days=1)
-                    if dbESD >= Dated:
-                        return jsonify({"message":"Effective Start Date shouldn't be earlier or same as candidate's Effective Start Date "})
-                    elif dbESD < Dated:
-                        dta.EFFECTIVE_END_DATE = PrevEED
-                   
-                    details = EMPLOYEE_DETAILS(
-                                        EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
-                                        EMPLOYEE_NUMBER = row.get('Emp_Number') if row.get('Emp_Number') else dbdata.EMPLOYEE_NUMBER,
-                                        FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
-                                        MIDDLE_NAME = middleName,# if data.get('Middle_Name') else dbdata.MIDDLE_NAME,
-                                        LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
-                                        USER_ID = user.USER_ID,
-                                        WORKER_TYPE = row.get('Worker_Type'),
-                                        DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
-                                        MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
-                                        EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
-                                        EFFECTIVE_END_DATE = row['Effective_End_Date'] if row['Effective_End_Date'] else dbdata.EFFECTIVE_END_DATE ,
-                                        JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
-                                        EMAIL_ID =email,
-                                        CREATED_BY = 'HRName',
-                                        LAST_UPDATED_BY = "HRName")
-                    returndata.append(details)
-                    returndta.append(details.serialize())
-                    print("returndata(a)",returndata)
-                if not emp_no:
-                    print("employee update")
-                    if Employee_number == dbdata.EMPLOYEE_NUMBER and email == dbdata.EMAIL_ID:
-                        dta = EMPLOYEE_DETAILS.query.filter(
-                                                        (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
-                                                        (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
-                                                        (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
-                                                    ).first()
+                    if Employee_number == dta.EMPLOYEE_NUMBER and email == dta.EMAIL_ID:
+                        print("sdfghjkl;vbnm,")
                         print("dta",dta)
                         print("fields changing")
                         print("data",row)
@@ -391,64 +404,70 @@ def addbulk():
                         print("Dated",Dated)
                         if Dated == dbESD:
                             print("fields changing same day")
-                            for record in row:
-                                    for i in record:
-                                        print("i",i)
-                                        cap = i.upper()
-                                        new_value = row.get(i)
-                                        print("new_value",new_value)
-                                        if getattr(dbdata,cap) != new_value:
-                                            print("new_value",new_value)
-                                            setattr(dbdata,cap,new_value)
+                            updateData = {
+                                        'FIRST_NAME': row.get('First_Name'),
+                                        'MIDDLE_NAME': middleName,
+                                        'LAST_NAME': row.get('Last_Name'),
+                                        'JOB_LOCATION': row.get('Job_Location'),
+                                        'WORKER_TYPE': row.get('Worker_Type'),
+                                        'EMAIL_ID': email,
+                                        'DATE_OF_BIRTH' : row.get('Date_Of_Birth'),
+                                        'MOBILE_NO' : mobilenum
+                                    }
+                            for key, value in updateData.items():
+                                if getattr(dta, key) != value:
+                                    setattr(dta, key, value)
+                            db.session.commit()
+                        if Dated != dbESD:
+                            fdata = EMPLOYEE_DETAILS.query.filter(
+                                                (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number'))&
+                                                (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE > row.get('Effective_Start_Date'))
+                                            ).order_by(EMPLOYEE_DETAILS.EFFECTIVE_START_DATE.asc()).first()
+                            print("fields changing diff day")
+                            print("middleName",middleName)
                    
-                        fdata = EMPLOYEE_DETAILS.query.filter(
-                                            (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number'))&
-                                            (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE > row.get('Effective_Start_Date'))
-                                        ).order_by(EMPLOYEE_DETAILS.EFFECTIVE_START_DATE.asc()).first()
-                        print("fields changing diff day")
-                        print("middleName",middleName)
-                   
-                        print(fdata,"lkjnhbgvfc")
-                        if not fdata:
-                            print("inside else")
-                            eed = row.get('Effective_End_Date')
-                        else:
-                            print("fdata",fdata)
-                            fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
-                            eed = fESD - timedelta(days=1)
-                        dta = EMPLOYEE_DETAILS.query.filter(
-                                                        (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
-                                                        (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
-                                                        (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
-                                                    ).first()
-                        print("dta",dta)
-                        Dated = str(row['Effective_Start_Date'])
-                        print("Dated",Dated)
-                        Datedb = datetime.strptime(Dated, "%Y-%m-%d %H:%M:%S")
-                        print("Datedb",Datedb)
-                        PrevEED = Datedb - timedelta(days=1)
-                        dta.EFFECTIVE_END_DATE = PrevEED
-                        details = EMPLOYEE_DETAILS(
-                                            EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
-                                            EMPLOYEE_NUMBER = row.get('Employee_Number') if row.get('Employee_Number') else dbdata.EMPLOYEE_NUMBER,
-                                            FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
-                                            MIDDLE_NAME = middleName,# if row.get('Middle_Name') else dbdata.MIDDLE_NAME,
-                                            LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
-                                            USER_ID = user.USER_ID,
-                                            WORKER_TYPE = row.get('Worker_Type') if row.get('Worker_Type') else dbdata.WORKER_TYPE,
-                                            DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
-                                            MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
-                                            EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
-                                            EFFECTIVE_END_DATE = eed,
-                                            JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
-                                            EMAIL_ID =email  if email else dbdata.EMAIL_ID,
-                                            CREATED_BY = 'HRName',
-                                            LAST_UPDATED_BY = "HRName")
-                        returndata.append(details)
-                        returndta.append(details.serialize())
- 
-                        print("returndata(b)",returndata)
-                    if Employee_number == dbdata.EMPLOYEE_NUMBER and email != dbdata.EMAIL_ID:
+                            print(fdata,"lkjnhbgvfc")
+                            if not fdata:
+                                print("inside else")
+                                eed = row.get('Effective_End_Date')
+                            else:
+                                print("fdata",fdata)
+                                fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                                eed = fESD - timedelta(days=1)
+                            dta = EMPLOYEE_DETAILS.query.filter(
+                                                            (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
+                                                            (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
+                                                            (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
+                                                        ).first()
+                            print("dta",dta)
+                            Dated = str(row['Effective_Start_Date'])
+                            print("Dated",Dated)
+                            Datedb = datetime.strptime(Dated, "%Y-%m-%d %H:%M:%S")
+                            print("Datedb",Datedb)
+                            PrevEED = Datedb - timedelta(days=1)
+                            dta.EFFECTIVE_END_DATE = PrevEED
+                            details = EMPLOYEE_DETAILS(
+                                                EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
+                                                EMPLOYEE_NUMBER = row.get('Employee_Number') if row.get('Employee_Number') else dbdata.EMPLOYEE_NUMBER,
+                                                FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
+                                                MIDDLE_NAME = middleName,# if row.get('Middle_Name') else dbdata.MIDDLE_NAME,
+                                                LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
+                                                USER_ID = user.USER_ID,
+                                                WORKER_TYPE = row.get('Worker_Type') if row.get('Worker_Type') else dbdata.WORKER_TYPE,
+                                                DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
+                                                MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
+                                                EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
+                                                EFFECTIVE_END_DATE = eed,
+                                                JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
+                                                EMAIL_ID =email  if email else dbdata.EMAIL_ID,
+                                                CREATED_BY = 'HRName',
+                                                LAST_UPDATED_BY = "HRName")
+                            returndata.append(details)
+                            returndta.append(details.serialize())
+   
+                            print("returndata(b)",returndata)
+                    if Employee_number == dta.EMPLOYEE_NUMBER and email != dta.EMAIL_ID:
+                        print("lk,jhgfdfghjkl;lkjhgfdfghjkl;lkjhgccvbnm,")
                         empf = row.get('Employee_Number')
                         # emp[0] = 'C' or 'E'
                         # emp_num = emp[0] + emp[1:]
@@ -457,7 +476,7 @@ def addbulk():
                             empb = i.EMPLOYEE_NUMBER
                             if empf[1:] != empb[1:]:
                                 return jsonify({"error":f"email {email} already exist"}),400
-
+ 
                         # if ddata:
                         #     return jsonify({"error":f"email {email} already exist"}),400
                         else:
@@ -478,67 +497,73 @@ def addbulk():
                             print("Dated",Dated)
                             if Dated == dbESD:
                                 print("email changing same day")
-                                for record in row:
-                                    for i in record:
-                                        print("i",i)
-                                        cap = i.upper()
-                                        new_value = row.get(i)
-                                        print("new_value",new_value)
-                                        if getattr(dbdata,cap) != new_value:
-                                            print("new_value",new_value)
-                                            setattr(dbdata,cap,new_value)
-                       
-                            # Dated = str(row['Effective_Start_Date'])
-                            print("email changing diff day")
-                            dta = EMPLOYEE_DETAILS.query.filter(
-                                                        (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
-                                                        (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
-                                                        (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
-                                                    ).first()
-                            print("dta",dta)
-                            # print("Dated",Dated)
-                            # Datedb = datetime.strptime(row['Effective_Start_Date'], "%Y-%m-%d")
-                            # print("Datedb",Datedb)
-                            # dbESD = datetime.strptime(str(dbdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
-                            Datedb = str(row['Effective_Start_Date'])
-                            print("Datedb",Datedb)
-                            Dated = datetime.strptime(Datedb, "%Y-%m-%d %H:%M:%S")
-                            print("Dated",Dated)
-                            PrevEED = Dated - timedelta(days=1)
-                            dta.EFFECTIVE_END_DATE = PrevEED
-                            fdata = EMPLOYEE_DETAILS.query.filter(
-                                            (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number'))&
-                                            (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE > row.get('Effective_Start_Date'))
-                                        ).order_by(EMPLOYEE_DETAILS.EFFECTIVE_START_DATE.asc()).first()
+                                updateData = {
+                                        'FIRST_NAME': row.get('First_Name'),
+                                        'MIDDLE_NAME': middleName,
+                                        'LAST_NAME': row.get('Last_Name'),
+                                        'JOB_LOCATION': row.get('Job_Location'),
+                                        'WORKER_TYPE': row.get('Worker_Type'),
+                                        'EMAIL_ID': email,
+                                        'DATE_OF_BIRTH' : row.get('Date_Of_Birth'),
+                                        'MOBILE_NO' : mobilenum
+                                    }
+                                for key, value in updateData.items():
+                                    if getattr(dta, key) != value:
+                                        setattr(dta, key, value)
+                                db.session.commit()
                    
-                            print(fdata,"lkjnhbgvfc")
-                            if not fdata:
-                                print("inside else")
-                                eed = row.get('Effective_End_Date')
-                            else:
-                                print("fdata",fdata)
-                                fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
-                                eed = fESD - timedelta(days=1)
-                            print("row.get('Mobile_No')",row.get('Mobile_No'))
-                            details = EMPLOYEE_DETAILS(
-                                                EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
-                                                EMPLOYEE_NUMBER = row.get('Employee_Number') if row.get('Employee_Number') else dbdata.EMPLOYEE_NUMBER,
-                                                FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
-                                                MIDDLE_NAME = middleName,# if row.get('Middle_Name') else dbdata.MIDDLE_NAME,
-                                                LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
-                                                USER_ID = user.USER_ID,
-                                                WORKER_TYPE = row.get('Worker_Type') if row.get('Worker_Type') else dbdata.WORKER_TYPE,
-                                                DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
-                                                MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
-                                                EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
-                                                EFFECTIVE_END_DATE = eed,
-                                                JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
-                                                EMAIL_ID =email  if email else dbdata.EMAIL_ID,
-                                                CREATED_BY = 'HRName',
-                                                LAST_UPDATED_BY = "HRName")
-                            returndata.append(details)
-                            returndta.append(details.serialize())
-                            print("returndata(c)",returndata)
+                            # Dated = str(row['Effective_Start_Date'])
+                            if Dated != dbESD:
+                                print("email changing diff day")
+                                dta = EMPLOYEE_DETAILS.query.filter(
+                                                            (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number')) &
+                                                            (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= row.get('Effective_Start_Date')) &
+                                                            (row.get('Effective_Start_Date') <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)
+                                                        ).first()
+                                print("dta",dta)
+                                # print("Dated",Dated)
+                                # Datedb = datetime.strptime(row['Effective_Start_Date'], "%Y-%m-%d")
+                                # print("Datedb",Datedb)
+                                # dbESD = datetime.strptime(str(dbdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                                Datedb = str(row['Effective_Start_Date'])
+                                print("Datedb",Datedb)
+                                Dated = datetime.strptime(Datedb, "%Y-%m-%d %H:%M:%S")
+                                print("Dated",Dated)
+                                PrevEED = Dated - timedelta(days=1)
+                                dta.EFFECTIVE_END_DATE = PrevEED
+                                fdata = EMPLOYEE_DETAILS.query.filter(
+                                                (EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == row.get('Employee_Number'))&
+                                                (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE > row.get('Effective_Start_Date'))
+                                            ).order_by(EMPLOYEE_DETAILS.EFFECTIVE_START_DATE.asc()).first()
+                   
+                                print(fdata,"lkjnhbgvfc")
+                                if not fdata:
+                                    print("inside else")
+                                    eed = row.get('Effective_End_Date')
+                                else:
+                                    print("fdata",fdata)
+                                    fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                                    eed = fESD - timedelta(days=1)
+                                print("row.get('Mobile_No')",row.get('Mobile_No'))
+                                details = EMPLOYEE_DETAILS(
+                                                    EMPLOYEE_ID = dbdata.EMPLOYEE_ID,
+                                                    EMPLOYEE_NUMBER = row.get('Employee_Number') if row.get('Employee_Number') else dbdata.EMPLOYEE_NUMBER,
+                                                    FIRST_NAME = row.get('First_Name') if row.get('First_Name') else dbdata.FIRST_NAME,
+                                                    MIDDLE_NAME = middleName,# if row.get('Middle_Name') else dbdata.MIDDLE_NAME,
+                                                    LAST_NAME = row.get('Last_Name') if row.get('Last_Name') else dbdata.LAST_NAME,
+                                                    USER_ID = user.USER_ID,
+                                                    WORKER_TYPE = row.get('Worker_Type') if row.get('Worker_Type') else dbdata.WORKER_TYPE,
+                                                    DATE_OF_BIRTH = row.get('Date_Of_Birth') if row.get('Date_Of_Birth') else dbdata.DATE_OF_BIRTH,
+                                                    MOBILE_NO = mobilenum if mobilenum else dbdata.MOBILE_NO,
+                                                    EFFECTIVE_START_DATE =  row['Effective_Start_Date'] if row['Effective_Start_Date'] else date.today(),
+                                                    EFFECTIVE_END_DATE = eed,
+                                                    JOB_LOCATION = row.get('Job_Location')if row.get('Job_Location') else dbdata.JOB_LOCATION,
+                                                    EMAIL_ID =email  if email else dbdata.EMAIL_ID,
+                                                    CREATED_BY = 'HRName',
+                                                    LAST_UPDATED_BY = "HRName")
+                                returndata.append(details)
+                                returndta.append(details.serialize())
+                                print("returndata(c)",returndata)
  
             if not dbdata:
                 print("adding candidate")
@@ -594,7 +619,7 @@ def addbulk():
                                     EMAIL_ID =email,
                                     CREATED_BY = 'HR',
                                     LAST_UPDATED_BY = 'HR')
-                
+               
                 returndata.append(details)
                 print("details",details)
                 returndta.append(details.serialize())
