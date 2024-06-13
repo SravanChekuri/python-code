@@ -4,8 +4,10 @@ from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pandas as pd
+import pandas as os
+
 from sqlalchemy import func
-from flask import jsonify, request, session
+from flask import jsonify, request, send_file, session
 from config import db
 from Model.employeeData import *
 from Model.empProfile import *
@@ -270,7 +272,11 @@ def addEmployee():
 
 def addbulk():
     try:
+        print("dfghjk")
         excel = request.files['EXCEL']
+        print("excel",excel)
+        if not excel:
+            return jsonify({"error":"please select the excel file"}),400
         df = pd.read_excel(excel,sheet_name=0)
         print("df[Name]",df)
         userEmail='sravanchekuri449@gmail.com'
@@ -1375,21 +1381,21 @@ def SearchEmployeedetails(empNum,date,enddate):
  
         get3 = Address_Details.query.filter(
                                    (Address_Details.EMPLOYEE_ID == get.EMPLOYEE_ID) &
-                                   (Address_Details.ADDRESS_TYPE == 'HOME')&
+                                   (Address_Details.ADDRESS_TYPE == 'Permanent')&
                                     (Address_Details.DATE_FROM <= ESD)&
                                     (Address_Details.DATE_TO <= EED)
                                 ).order_by(Address_Details.DATE_FROM.desc()).first()
         if get3:
-            returndata['Home_Address_Details'] =get3.serialize()
+            returndata['Permanent_Address_Details'] =get3.serialize()
        
         get4 = Address_Details.query.filter(
                                    (Address_Details.EMPLOYEE_ID == get.EMPLOYEE_ID) &
-                                   (Address_Details.ADDRESS_TYPE == 'WORK')&
+                                   (Address_Details.ADDRESS_TYPE == 'Present')&
                                     (Address_Details.DATE_FROM <= ESD)&
                                     (Address_Details.DATE_TO <= EED)
                                 ).order_by(Address_Details.DATE_FROM.desc()).first()
         if get4:
-            returndata['Work_Address_Details'] =get4.serialize()
+            returndata['Present_Address_Details'] =get4.serialize()
  
        
         print("data.serialize()", returndata)
@@ -1398,6 +1404,20 @@ def SearchEmployeedetails(empNum,date,enddate):
         return jsonify({'error': str(e)}), 500
 
 
+def searchemp_num(num):
+    try:
+        emp_num = num
+        print("emp_num",emp_num)
+        returndata=[]
+        get = EMPLOYEE_DETAILS.query.filter(func.lower(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER).startswith(emp_num.lower())).all()
+        if not get:
+            return jsonify({"message":"employee not found"}),404
+        for i in get:
+            returndata.append(i.serialize())
+        return jsonify(returndata), 200
+    except Exception as e:
+        return jsonify({'error':str(e)}),500
+    
 # search employee[GET Method]
 def filterPersons(search_data):
    
@@ -1450,5 +1470,44 @@ def filterPersons(search_data):
     # except Exception as e:
     #     return jsonify({'error': str(e)}), 500    
 
-
+# def getexcel1():
+#     try:
+#         # Fetch data from the EMPLOYEE_DETAILS table
+#         empDetails = EMPLOYEE_DETAILS.query.limit(3).all()
+       
+#         # Convert the data to a list of dictionaries
+#         data_list = []
+#         for emp in empDetails:
+#             data_list.append({
+#                 'Employee_Number': emp.EMPLOYEE_NUMBER,
+#                 'Effective_Start_Date' : emp.EFFECTIVE_START_DATE,
+#                 'Effective_End_Date' : emp.EFFECTIVE_END_DATE,
+#                 'First_Name' : emp.FIRST_NAME,
+#                 'Middle_Name' : emp.MIDDLE_NAME,
+#                 'Last_Name' : emp.LAST_NAME,
+#                 'Date_Of_Birth' : emp.DATE_OF_BIRTH,
+#                 'Job_Location' : emp.JOB_LOCATION,
+#                 'Worker_Type' : emp.WORKER_TYPE,
+#                 'Mobile_No' : emp.MOBILE_NO,
+#                 'Email_Id' : emp.EMAIL_ID,
+#                 'Created_By' : emp.CREATED_BY,
+#                 'Last_Updated_By' : emp.LAST_UPDATED_BY,
+#             })
+       
+#         # Create a DataFrame from the list of dictionaries
+#         df = pd.DataFrame(data_list)
+#         # Get the absolute path to the directory where the script is located
+#         script_dir = os.path.dirname(os.path.abspath(__file__))
+ 
+#         # Construct the absolute path to the output Excel file
+#         excel_file_path = os.path.join(script_dir, 'output.xlsx')
+#         # Export DataFrame to Excel
+#         # excel_file_path = 'output.xlsx'
+#         df.to_excel(excel_file_path, index=False)
+       
+#         # Send the Excel file as a response
+#         return send_file(excel_file_path, as_attachment=True, download_name='output.xlsx')
+   
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 

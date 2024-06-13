@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import re
 import pandas as pd
 from sqlalchemy import func
 from flask import jsonify, request, session
@@ -48,9 +49,13 @@ def employementdetails(id):
         DOJ = str(data.get('Date_Of_Joining'))
         DOJstrp = datetime.strptime(DOJ, "%Y-%m-%d")
         print("DOJ",DOJstrp)
-        confirmation_date = DOJstrp + timedelta(days = 365)
+        
        
         if dbemp:
+            probation_period = str(data.get('Probation_Period'))
+            digits = re.findall(r'\d+', probation_period)
+            prob_int = int(digits[0])
+            confirmation_date = DOJstrp + timedelta(days = prob_int * 30 )
             Dated = str(data['Effective_Start_Date'])
             Datedb = datetime.strptime(Dated, "%Y-%m-%d")
             dat = datetime.strptime(str(dbemp.EFFECTIVE_START_DATE), "%Y-%m-%d")
@@ -133,13 +138,13 @@ def employementdetails(id):
                 return jsonify({"message":f"{data['Employee_Id']} newrecord added successfully", "data":details.serialize()}),201
  
        
-       
+        print("dfghjk")
         details = Employement_Details(
             EMPLOYEE_ID = data.get('Employee_Id'),
             ORGANIZATION_NAME = data.get('Organization_Name'),
             DESIGNATION = data.get('Designation'),
             DEPARTMENT = data.get('Department'),
-            CONFIRMATION_DATE = confirmation_date,
+            # CONFIRMATION_DATE = confirmation_date,
             PERSON_TYPE = data.get('Person_Type'),
             STATUS = data.get('Status'),
             CTC = data.get('Ctc'),
@@ -162,7 +167,18 @@ def employementdetails(id):
     except Exception as e:
         return jsonify({'error':str(e)}),500
 
-
+# def search_empnum(num):
+#     try:
+#         returndata=[]
+#         search = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == num).all()
+#         if not search:
+#             return jsonify({"error":"employee not found"}),400
+#         if search:
+#             for i in search:
+#                 returndata.append(i.serialize())
+#                 return jsonify({"data":returndata}),200
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 def getEmployementdetail(id,date,enddate):
     try:
@@ -220,7 +236,7 @@ def addressdetails(id):
        
        
            
-        if data['Address_Type'] == 'WORK':
+        if data['Address_Type'] == 'Present':
             print("lokijhg")
             if dbdata:
                 Dated = str(data['Date_From'])
@@ -296,7 +312,7 @@ def addressdetails(id):
             db.session.add(details)
             db.session.commit()
             return jsonify({"message":f"{data.get('Employee_Id')} address details added successfully", "data":details.serialize()}),201
-        elif data['Address_Type'] == 'HOME':
+        elif data['Address_Type'] == 'Permanent':
             # print("inside elif",dbdata, data['Address_Type'],type(data['Address_Type']))
             if dbdata:
                 Dated = str(data['Date_From'])

@@ -74,17 +74,82 @@ def gettemplate():
     try:
         returndata =[]
         get = Template.query.all()
+        print("get",get)
         if not get:
             return jsonify({"error":"templates not found"}),400
         for i in get:
+            print("i",i)
             returndata.append(i.serialize())
-            return jsonify({'data': returndata}),200
+        return jsonify({'data': returndata}),200
     except Exception as e:
         return jsonify({'error':str(e)}),500
+    
+def getexcel1():
+    try:
+        # Fetch data from the EMPLOYEE_DETAILS table
+        empDetails = EMPLOYEE_DETAILS.query.limit(3).all()
+       
+        # Convert the data to a list of dictionaries
+        data_list = []
+        for emp in empDetails:
+            data_list.append({
+                'Employee_Number': emp.EMPLOYEE_NUMBER,
+                'Effective_Start_Date' : emp.EFFECTIVE_START_DATE,
+                'Effective_End_Date' : emp.EFFECTIVE_END_DATE,
+                'First_Name' : emp.FIRST_NAME,
+                'Middle_Name' : emp.MIDDLE_NAME,
+                'Last_Name' : emp.LAST_NAME,
+                'Date_Of_Birth' : emp.DATE_OF_BIRTH,
+                'Job_Location' : emp.JOB_LOCATION,
+                'Worker_Type' : emp.WORKER_TYPE,
+                'Mobile_No' : emp.MOBILE_NO,
+                'Email_Id' : emp.EMAIL_ID,
+                'Created_By' : emp.CREATED_BY,
+                'Last_Updated_By' : emp.LAST_UPDATED_BY,
+            })
+       
+        # Create a DataFrame from the list of dictionaries
+        df = pd.DataFrame(data_list)
+        # Get the absolute path to the directory where the script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
  
+        # Construct the absolute path to the output Excel file
+        excel_file_path = os.path.join(script_dir, 'output.xlsx')
+        # Export DataFrame to Excel
+        # excel_file_path = 'output.xlsx'
+        df.to_excel(excel_file_path, index=False)
+       
+        # Send the Excel file as a response
+        return send_file(excel_file_path, as_attachment=True, download_name='output.xlsx')
+   
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+def getletter(empNumber):
+    try:
+        print("xcvm")
+        returndata =[]
+        # data = request.json
+        # num = data.get('Employee_Number')
+        num = empNumber
+        emp_num = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == num).first()
+        if not emp_num:
+            return jsonify({"error":"employee not found"}),404
+        emp_id = emp_num.EMPLOYEE_ID
+        get = Letter.query.filter(Letter.EMPLOYEE_ID == emp_id).all()
+        if not get:
+            return jsonify({"error":"letters not found"}),404
+        for i in get:
+            returndata.append(i.serialize())
+        return jsonify({'data': returndata}),200
+    except Exception as e:
+        return jsonify({'error':str(e)}),500
+    
 def convertrtf(TEMPLATE_ID):
     try:
         temp = Template.query.filter(Template.TEMPLATE_ID==TEMPLATE_ID).one()
+        if not temp:
+            return jsonify({'error':'template not found'}),404
         print("temp",temp)
         x = temp.TEMPLATE
         print("x",x)
@@ -337,7 +402,7 @@ def add_data_pdf():
 
 def Generateletter():
     try:
-        
+       
         frontend_data = request.json
         print("frontend_data",frontend_data)
         Emp_Number = frontend_data['Employee_Number']
@@ -347,6 +412,8 @@ def Generateletter():
         # return 'string'
         data = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Emp_Number) & (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= today) &(today <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)).first()
         print("data",data)
+        if not data:
+            return jsonify ({"error":"employee not found"}),404
         Letter_type = frontend_data['letterType']
         temp_Id = frontend_data['letterId']
         temp = Template.query.filter(Template.TEMPLATE_ID==temp_Id).one()
@@ -355,6 +422,8 @@ def Generateletter():
         text = var.decode('utf-8')
  
         getemployement_details = Employement_Details.query.filter((Employement_Details.EMPLOYEE_ID == data.EMPLOYEE_ID) & (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= today) &(today <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)).first()
+        if not getemployement_details:
+            return jsonify ({"error":"employement details not found"}),404
         First_Name = data.FIRST_NAME
         print("First_Name",First_Name)
         # Middle_Name = data.MIDDLE_NAME
@@ -371,6 +440,8 @@ def Generateletter():
                                                                   & (Employement_Details.EFFECTIVE_START_DATE <= today)
                                                                   &(today <= Employement_Details.EFFECTIVE_END_DATE)).first()
         print("getemployement_details",getemployement_details)
+        if not getemployement_details:
+            return jsonify ({"error":"employement deatils not found"}),404
         a = getemployement_details.CTC
         # a = request.form.get('CTC')
         print("ctc",a)
@@ -542,10 +613,14 @@ def viewpdf():
         today = date.today()
         data = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Emp_Number) & (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= today) &(today <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)).first()
         print("data",data)
+        if not data:
+            return jsonify ({"error":"employee not found"}),404
         emp_id = data.EMPLOYEE_ID
         # temp_Id = dataa['letterId']
         letter = Letter.query.filter((Letter.EMPLOYEE_ID == emp_id) & (Letter.TEMPLATE_ID == temp_Id)).first()
         print('letter',letter)
+        if not letter:
+            return jsonify ({"error":"letter not found"}),404
         pdf = letter.LETTER
         # pdfread = pdf.read()
  

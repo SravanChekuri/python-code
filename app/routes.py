@@ -174,6 +174,15 @@ def get_Employementdetail(id,date,enddate):
     return getEmployementdetail(id,date,enddate)
 
 
+# @Flask_app.route('/search_by_empnum/<num>', methods=['GET'])
+# def search_by_empnum(num):
+#     print("search_by_empnum",search_by_empnum)
+#     return search_empnum(num)
+
+# search employees by emp number
+@Flask_app.route('/searchempnum/<num>', methods=['GET']) ##
+def searchempnum(num):
+    return searchemp_num(num)
 
 # ////////////address details///////////
 # add & update address
@@ -228,10 +237,21 @@ def delete_admin(id):
 def add_template():
     return addtemplate()
 
+# to download sample excel sheet
+@Flask_app.route('/get_excel',methods=['GET'])
+def get_excel():
+    return getexcel1()
+ 
 # get template
 @Flask_app.route('/get_template',methods=['GET'])
 def get_template():
     return gettemplate()
+
+# get letter by employee number
+@Flask_app.route('/get_letter/<empNumber>',methods=['GET'])
+def get_letter(empNumber):
+    print("xcvbnm,mnbv")
+    return getletter(empNumber)
 
 # retrieve template
 @Flask_app.route('/retrieve_template/<string:Id>', methods=['GET'])
@@ -256,7 +276,6 @@ def generate_Letter():
     return Generateletter()
 
 
-
 # generate letter
 @Flask_app.route('/add_data_pdf', methods=['POST'])
 def adddata_pdf():
@@ -269,4 +288,9 @@ def view_pdf():
     print("fcgvbhjnmkjio")
     return viewpdf()
 
+# # to download sample excel sheet
+# @Flask_app.route('/get_excel',methods=['GET'])
+# def get_excel():
+#     return getexcel1()
+ 
 
