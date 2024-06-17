@@ -1367,15 +1367,18 @@ def SearchEmployeedetails(empNum,date,enddate):
                                     (EMPLOYEE_DETAILS.EFFECTIVE_END_DATE <= EED)
                                 ).order_by(EMPLOYEE_DETAILS.EFFECTIVE_START_DATE.desc()).first()
        
-        print("get", get)
         if not get:
             return jsonify({'message': 'Data not Found'}), 404
+        print("get", get,get.WORKER_TYPE)
+        
         returndata['EMPLOYEE_DETAILS'] =get.serialize()
         get2 = Employement_Details.query.filter(
                                    (Employement_Details.EMPLOYEE_ID == get.EMPLOYEE_ID) &
+                                   (Employement_Details.PERSON_TYPE == get.WORKER_TYPE) &
                                     (Employement_Details.EFFECTIVE_START_DATE <= ESD)&
                                     (Employement_Details.EFFECTIVE_END_DATE <= EED)
                                 ).order_by(Employement_Details.EFFECTIVE_START_DATE.desc()).first()
+        print("get2",get2)
         if get2:
             returndata['Employement_Details'] =get2.serialize()
  

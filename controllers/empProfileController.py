@@ -220,6 +220,7 @@ def getEmployementdetails(id):
 def addressdetails(id):
     try:
         data = request.json
+        print("data",data)
         address_type = data['Address_Type']
         print("address_type",address_type)
         today = date.today()
@@ -262,23 +263,24 @@ def addressdetails(id):
                     return jsonify({"message": "update existing record", "data":dbdata.serialize()}),200
                 else:
                     Dated = str(data['Date_From'])
-                    print("Datedb",Datedb)
+                    print("Datedb",Dated)
                     Datedb = datetime.strptime(Dated, "%Y-%m-%d")
                     PrevEED = Datedb - timedelta(days=1)
                     dbdata.DATE_TO = PrevEED
+                    print("PrevEED",PrevEED)
  
-                    fdata = Employement_Details.query.filter(
-                                    (Employement_Details.EMPLOYEE_ID == id) &
-                                        (Employement_Details.EFFECTIVE_START_DATE > data.get('Effective_Start_Date'))
-                                    ).order_by(Employement_Details.EFFECTIVE_START_DATE.asc()).first()
+                    fdata = Address_Details.query.filter(
+                                    (Address_Details.EMPLOYEE_ID == id) &
+                                        (Address_Details.DATE_FROM > data.get('Date_From'))
+                                    ).order_by(Address_Details.DATE_FROM.asc()).first()
                
-                    print(fdata,"lkjnhbgvfc")
+                    # print(fdata,"lkjnhbgvfc")
                     if not fdata:
                         print("inside else")
-                        eed = data.get('Effective_End_Date')
+                        eed = data.get('Date_To')
                     else:
                         print("fdata",fdata)
-                        fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                        fESD = datetime.strptime(str(fdata.DATE_FROM), "%Y-%m-%d")
                         eed = fESD - timedelta(days=1)
                     details = Address_Details(
                         EMPLOYEE_ID = data.get('Employee_Id'),
@@ -342,18 +344,18 @@ def addressdetails(id):
                     Datedb = datetime.strptime(Dated, "%Y-%m-%d")
                     PrevEED = Datedb - timedelta(days=1)
                     dbdata.DATE_TO = PrevEED
-                    fdata = Employement_Details.query.filter(
-                                    (Employement_Details.EMPLOYEE_ID == id) &
-                                        (Employement_Details.EFFECTIVE_START_DATE > data.get('Effective_Start_Date'))
-                                    ).order_by(Employement_Details.EFFECTIVE_START_DATE.asc()).first()
+                    fdata = Address_Details.query.filter(
+                                    (Address_Details.EMPLOYEE_ID == id) &
+                                        (Address_Details.DATE_FROM > data.get('Date_From'))
+                                    ).order_by(Address_Details.DATE_FROM.asc()).first()
                
                     print(fdata,"lkjnhbgvfc")
                     if not fdata:
                         print("inside else")
-                        eed = data.get('Effective_End_Date')
+                        eed = data.get('Date_To')
                     else:
                         print("fdata",fdata)
-                        fESD = datetime.strptime(str(fdata.EFFECTIVE_START_DATE), "%Y-%m-%d")
+                        fESD = datetime.strptime(str(fdata.DATE_FROM), "%Y-%m-%d")
                         eed = fESD - timedelta(days=1)
                     details = Address_Details(
                         EMPLOYEE_ID = data.get('Employee_Id'),
@@ -392,3 +394,32 @@ def addressdetails(id):
             return jsonify({"message":f"{data.get('Employee_Id')} address details added successfully", "data":details.serialize()}),201
     except Exception as e:
         return jsonify({'error':str(e)}),500
+
+
+
+def getAddressdetail(id,esd,end,addressType):
+    try:
+        print("lkjhgf")
+        # data = request.json
+        ESD = esd
+        address_type = addressType
+        EED = end
+        if EED == 'undefined':
+            EED = '4712-12-31'
+        else:
+            EED = end
+        # ESD = request.args.get('Effective_Start_Date')
+        print("ESD",ESD,EED,address_type)
+        get = Address_Details.query.filter(
+                                   (Address_Details.EMPLOYEE_ID == id) &
+                                    (Address_Details.DATE_FROM <= ESD)&
+                                    (Address_Details.ADDRESS_TYPE == address_type)&
+                                    (Address_Details.DATE_TO <= EED)
+                                ).order_by(Address_Details.DATE_FROM.desc()).first()
+        print("get", get)
+        if not get:
+            return jsonify({'message': 'data not found'}), 404
+        print("data.serialize()", get.serialize())
+        return jsonify({'data': get.serialize()}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

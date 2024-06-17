@@ -293,4 +293,7 @@ def view_pdf():
 # def get_excel():
 #     return getexcel1()
  
+@Flask_app.route('/get_address_detail/<id>/<esd>/<end>/<addressType>', methods=['GET'])
+def get_address_detail(id,esd,end,addressType):
+    return getAddressdetail(id,esd,end,addressType)
 

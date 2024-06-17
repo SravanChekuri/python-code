@@ -611,7 +611,7 @@ def viewpdf():
         Emp_Number = request.args.get('param2')
         print('Emp_Number---->',temp_Id,Emp_Number)
         today = date.today()
-        data = EMPLOYEE_DETAILS.query.filter((EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Emp_Number) & (EMPLOYEE_DETAILS.EFFECTIVE_START_DATE <= today) &(today <= EMPLOYEE_DETAILS.EFFECTIVE_END_DATE)).first()
+        data = EMPLOYEE_DETAILS.query.filter(EMPLOYEE_DETAILS.EMPLOYEE_NUMBER == Emp_Number).first()
         print("data",data)
         if not data:
             return jsonify ({"error":"employee not found"}),404
