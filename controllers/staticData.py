@@ -24,18 +24,18 @@ def addsuperadmin():
                 hashed_password = bcrypt.generate_password_hash(password1).decode('utf-8')
                
                 details = Admin(
-                    USER_ID = 10001,
-                    FIRST_NAME = 'AdminFN',
-                    MIDDLE_NAME = 'AdminMN',
-                    LAST_NAME = 'AdminLN',
+                    USER_ID = 1,
+                    FIRST_NAME = 'Sravan',
+                    MIDDLE_NAME = 'Varma',
+                    LAST_NAME = 'Chekuri',
                     EMAIL_ID = email,
                     PASSWORD = hashed_password,
-                    MOBILE_NUMBER = '9873765983',
-                    ROLE = 'Admin',
+                    MOBILE_NUMBER = '8499963345',
+                    ROLE = 'Super Admin',
                     EFFECTIVE_START_DATE = date.today(),
                     EFFECTIVE_END_DATE = '4712-12-31',
-                    CREATED_BY = 'HR',
-                    LAST_UPDATED_BY = 'HR'
+                    CREATED_BY = 'Hard code',
+                    LAST_UPDATED_BY = 'Hard code'
                 )
                
                 fromEmail = os.environ.get("SMTP_EMAIL")
